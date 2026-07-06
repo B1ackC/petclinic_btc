@@ -7,10 +7,5 @@ target/
 *.iml
 .editorconfig
 
-# Maven Wrapper (로컬/개인용 - 미포함)
-.mvn/
-mvnw
-mvnw.cmd
-
 # CI(구형)
 .travis.yml

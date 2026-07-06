@@ -39,23 +39,14 @@
 - 브라우저로 화면 접속 -> 목록 렌더링 확인
 
 ## WAS
-설치, Maven 미설치 시 (택1):
-```
-choco install maven
-scoop install maven
-sudo dnf install -y maven
-sudo apt install -y maven
-brew install maven
-```
 빌드:
 ```
 git clone https://github.com/B1ackC/petclinic_btc.git
 cd petclinic_btc
-mvn -P MySQL clean package
+./mvnw -P MySQL clean package
 ```
-- 설치 명령 순서: Windows(Chocolatey) / Windows(Scoop) / Amazon Linux 2023 / Ubuntu·Debian / macOS
-- 패키지 매니저가 없으면: maven.apache.org 에서 zip 다운로드 -> 압축 해제 -> `bin` 폴더를 PATH 에 추가 (JDK 8/11 선설치)
-- Maven 3.6 이상 필요
+- Windows: `mvnw.cmd -P MySQL clean package`
+- Maven Wrapper(`mvnw`) 포함 -> Maven 설치 불필요 (JDK 8/11 만 있으면 됨)
 - 결과물: `target/petclinic-api.war`
 
 테스트 (`BASE` = 서버 또는 CloudFront 주소):
