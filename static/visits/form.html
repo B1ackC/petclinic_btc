@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/x-icon" href="../resources/images/favicon.png">
+    <title>PetClinic :: 반려동물 병원 관리 시스템</title>
+    <link href="../resources/css/petclinic.css" rel="stylesheet"/>
+    <link href="../webjars/jquery-ui/1.12.1/jquery-ui.min.css" rel="stylesheet"/>
+    <link href="../webjars/jquery-ui/1.12.1/jquery-ui.theme.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+
+<div class="container-fluid">
+    <div class="container xd-container">
+
+        <h2>신규 방문 기록</h2>
+
+        <span id="pet-header"><strong>반려동물</strong></span>
+        <table class="table table-striped" id="pet-info-table" aria-describedby="pet-header" style="display:none;">
+            <thead>
+            <tr>
+                <th scope="col">이름</th>
+                <th scope="col">생년월일</th>
+                <th scope="col">종류</th>
+                <th scope="col">보호자</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td id="pet-name"></td>
+                <td id="pet-birthDate"></td>
+                <td id="pet-type"></td>
+                <td id="pet-owner"></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <form class="form-horizontal" id="visit-form">
+            <div class="form-group has-feedback">
+
+                <div class="form-group" id="fg-date">
+                    <label class="col-sm-2 control-label">날짜</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="date"/>
+                        <span class="glyphicon glyphicon-ok form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="glyphicon glyphicon-remove form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="help-inline"></span>
+                    </div>
+                </div>
+
+                <div class="form-group" id="fg-description">
+                    <label class="col-sm-2 control-label">내용</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="description"/>
+                        <span class="glyphicon glyphicon-ok form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="glyphicon glyphicon-remove form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="help-inline"></span>
+                    </div>
+                </div>
+
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button class="btn btn-default" type="submit">방문 기록 등록</button>
+                </div>
+            </div>
+        </form>
+
+        <br/>
+        <strong id="previousVisits">이전 방문 기록</strong>
+        <table class="table table-striped" id="prev-visits-table" aria-describedby="previousVisits" style="display:none;">
+            <tr>
+                <th scope="col">날짜</th>
+                <th scope="col">내용</th>
+            </tr>
+            <tbody id="prev-visits-body"></tbody>
+        </table>
+
+        <div id="pivotal-placeholder"></div>
+    </div>
+</div>
+
+<script src="../webjars/jquery/3.5.1/jquery.min.js"></script>
+<script src="../webjars/jquery-ui/1.12.1/jquery-ui.min.js"></script>
+<script src="../webjars/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+renderLayout({ active: 'owners', root: '..' });
+
+$(function() {
+    $('#date').datepicker({ dateFormat: 'yy/mm/dd' });
+});
+
+function qs(k) { return new URLSearchParams(window.location.search).get(k); }
+var ownerId = qs('ownerId');
+var petId   = qs('petId');
+
+// 반려동물 정보 표시 + 이전 방문 기록
+if (ownerId && petId) {
+    api.getOwner(ownerId).done(function(owner) {
+        var pet = (owner.pets || []).find(function(p) { return String(p.id) === String(petId); });
+        if (pet) {
+            $('#pet-name').text(pet.name);
+            $('#pet-birthDate').text(pet.birthDate ? pet.birthDate.replace(/-/g, '/') : '');
+            $('#pet-type').text(pet.type ? pet.type.name : '');
+            $('#pet-owner').text(owner.firstName + ' ' + owner.lastName);
+            $('#pet-info-table').show();
+
+            var prevRows = (pet.visits || []).map(function(v) {
+                return '<tr><td>' + (v.date ? v.date.replace(/-/g, '/') : '') + '</td><td>' + (v.description || '') + '</td></tr>';
+            }).join('');
+            if (prevRows) {
+                $('#prev-visits-body').html(prevRows);
+                $('#prev-visits-table').show();
+            }
+        }
+    });
+}
+
+// 오늘 날짜 기본값
+(function() {
+    var t = new Date();
+    var m = String(t.getMonth()+1).padStart(2,'0');
+    var d = String(t.getDate()).padStart(2,'0');
+    $('#date').val(t.getFullYear() + '/' + m + '/' + d);
+})();
+
+$('#visit-form').on('submit', function(e) {
+    e.preventDefault();
+    if (!ownerId || !petId) return;
+
+    var rawDate = $('#date').val().trim().replace(/\//g, '-');
+    var data = {
+        date:        rawDate,
+        description: $('#description').val().trim()
+    };
+
+    api.addVisit(ownerId, petId, data)
+        .done(function() {
+            window.location.href = '../owners/detail.html?id=' + ownerId;
+        })
+        .fail(function(xhr) {
+            if (xhr.responseJSON) {
+                $.each(xhr.responseJSON, function(field, msg) {
+                    var $fg = $('#fg-' + field);
+                    $fg.addClass('has-error');
+                    $fg.find('.glyphicon-remove').show();
+                    $fg.find('.help-inline').text(msg);
+                });
+            }
+        });
+});
+</script>
+</body>
+</html>

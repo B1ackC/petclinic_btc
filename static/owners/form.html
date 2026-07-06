@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/x-icon" href="../resources/images/favicon.png">
+    <title>PetClinic :: 반려동물 병원 관리 시스템</title>
+    <link href="../resources/css/petclinic.css" rel="stylesheet"/>
+    <link href="../webjars/jquery-ui/1.12.1/jquery-ui.min.css" rel="stylesheet"/>
+    <link href="../webjars/jquery-ui/1.12.1/jquery-ui.theme.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+
+<div class="container-fluid">
+    <div class="container xd-container">
+
+        <h2 id="page-title">신규 보호자</h2>
+
+        <form class="form-horizontal" id="owner-form">
+            <div class="form-group has-feedback">
+
+                <div class="form-group" id="fg-firstName">
+                    <label class="col-sm-2 control-label">이름</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="firstName"/>
+                        <span class="glyphicon glyphicon-ok form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="glyphicon glyphicon-remove form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="help-inline"></span>
+                    </div>
+                </div>
+
+                <div class="form-group" id="fg-lastName">
+                    <label class="col-sm-2 control-label">성</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="lastName"/>
+                        <span class="glyphicon glyphicon-ok form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="glyphicon glyphicon-remove form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="help-inline"></span>
+                    </div>
+                </div>
+
+                <div class="form-group" id="fg-address">
+                    <label class="col-sm-2 control-label">주소</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="address"/>
+                        <span class="glyphicon glyphicon-ok form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="glyphicon glyphicon-remove form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="help-inline"></span>
+                    </div>
+                </div>
+
+                <div class="form-group" id="fg-city">
+                    <label class="col-sm-2 control-label">도시</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="city"/>
+                        <span class="glyphicon glyphicon-ok form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="glyphicon glyphicon-remove form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="help-inline"></span>
+                    </div>
+                </div>
+
+                <div class="form-group" id="fg-telephone">
+                    <label class="col-sm-2 control-label">전화번호</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="telephone"/>
+                        <span class="glyphicon glyphicon-ok form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="glyphicon glyphicon-remove form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="help-inline"></span>
+                    </div>
+                </div>
+
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button class="btn btn-default" type="submit" id="submit-btn">보호자 등록</button>
+                </div>
+            </div>
+        </form>
+
+        <div id="pivotal-placeholder"></div>
+    </div>
+</div>
+
+<script src="../webjars/jquery/3.5.1/jquery.min.js"></script>
+<script src="../webjars/jquery-ui/1.12.1/jquery-ui.min.js"></script>
+<script src="../webjars/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+renderLayout({ active: 'owners', root: '..' });
+
+function qs(k) { return new URLSearchParams(window.location.search).get(k); }
+var ownerId = qs('id');
+
+if (ownerId) {
+    $('#page-title').text('보호자 수정');
+    $('#submit-btn').text('보호자 수정');
+    api.getOwner(ownerId).done(function(o) {
+        $('#firstName').val(o.firstName);
+        $('#lastName').val(o.lastName);
+        $('#address').val(o.address);
+        $('#city').val(o.city);
+        $('#telephone').val(o.telephone);
+        markValid('firstName'); markValid('lastName');
+        markValid('address');   markValid('city');
+        markValid('telephone');
+    });
+}
+
+function clearFieldErrors() {
+    ['firstName','lastName','address','city','telephone'].forEach(function(id) {
+        var $fg = $('#fg-' + id);
+        $fg.removeClass('has-error has-success');
+        $fg.find('.glyphicon-ok,.glyphicon-remove').hide();
+        $fg.find('.help-inline').text('');
+    });
+}
+
+function markValid(id) {
+    var $fg = $('#fg-' + id);
+    $fg.addClass('has-success');
+    $fg.find('.glyphicon-ok').show();
+}
+
+function markError(id, msg) {
+    var $fg = $('#fg-' + id);
+    $fg.addClass('has-error').removeClass('has-success');
+    $fg.find('.glyphicon-ok').hide();
+    $fg.find('.glyphicon-remove').show();
+    $fg.find('.help-inline').text(msg);
+}
+
+$('#owner-form').on('submit', function(e) {
+    e.preventDefault();
+    clearFieldErrors();
+
+    var data = {
+        firstName: $('#firstName').val().trim(),
+        lastName:  $('#lastName').val().trim(),
+        address:   $('#address').val().trim(),
+        city:      $('#city').val().trim(),
+        telephone: $('#telephone').val().trim()
+    };
+
+    var req = ownerId ? api.updateOwner(ownerId, data) : api.createOwner(data);
+    req.done(function(owner) {
+        window.location.href = 'detail.html?id=' + owner.id;
+    }).fail(function(xhr) {
+        if (xhr.responseJSON) {
+            $.each(xhr.responseJSON, function(field, msg) { markError(field, msg); });
+        }
+    });
+});
+</script>
+</body>
+</html>

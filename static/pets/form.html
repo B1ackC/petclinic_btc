@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/x-icon" href="../resources/images/favicon.png">
+    <title>PetClinic :: 반려동물 병원 관리 시스템</title>
+    <link href="../resources/css/petclinic.css" rel="stylesheet"/>
+    <link href="../webjars/jquery-ui/1.12.1/jquery-ui.min.css" rel="stylesheet"/>
+    <link href="../webjars/jquery-ui/1.12.1/jquery-ui.theme.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+
+<div class="container-fluid">
+    <div class="container xd-container">
+
+        <h2 id="page-title">신규 반려동물</h2>
+
+        <form class="form-horizontal" id="pet-form">
+            <div class="form-group has-feedback">
+
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">보호자</label>
+                    <div class="col-sm-10">
+                        <span id="owner-name"></span>
+                    </div>
+                </div>
+
+                <div class="form-group" id="fg-name">
+                    <label class="col-sm-2 control-label">이름</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="name"/>
+                        <span class="glyphicon glyphicon-ok form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="glyphicon glyphicon-remove form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="help-inline"></span>
+                    </div>
+                </div>
+
+                <div class="form-group" id="fg-birthDate">
+                    <label class="col-sm-2 control-label">생년월일</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="birthDate"/>
+                        <span class="glyphicon glyphicon-ok form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="glyphicon glyphicon-remove form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                        <span class="help-inline"></span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="form-group" id="fg-typeId">
+                        <label class="col-sm-2 control-label">종류 </label>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="typeId" size="5">
+                            </select>
+                            <span class="glyphicon glyphicon-ok form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                            <span class="glyphicon glyphicon-remove form-control-feedback" style="display:none;" aria-hidden="true"></span>
+                            <span class="help-inline"></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button class="btn btn-default" type="submit" id="submit-btn">반려동물 등록</button>
+                </div>
+            </div>
+        </form>
+
+        <div id="pivotal-placeholder"></div>
+    </div>
+</div>
+
+<script src="../webjars/jquery/3.5.1/jquery.min.js"></script>
+<script src="../webjars/jquery-ui/1.12.1/jquery-ui.min.js"></script>
+<script src="../webjars/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+renderLayout({ active: 'owners', root: '..' });
+
+$(function() {
+    $('#birthDate').datepicker({ dateFormat: 'yy/mm/dd' });
+});
+
+function qs(k) { return new URLSearchParams(window.location.search).get(k); }
+var ownerId = qs('ownerId');
+var petId   = qs('petId');
+
+if (petId) {
+    $('#page-title').text('반려동물 수정');
+    $('#submit-btn').text('반려동물 수정');
+}
+
+// 종류 목록 로드 후 수정 모드면 기존 값 세팅
+api.getPetTypes().done(function(types) {
+    types.forEach(function(t) {
+        $('#typeId').append('<option value="' + t.id + '">' + t.name + '</option>');
+    });
+
+    if (petId && ownerId) {
+        api.getOwner(ownerId).done(function(owner) {
+            $('#owner-name').text(owner.firstName + ' ' + owner.lastName);
+            var pet = (owner.pets || []).find(function(p) { return String(p.id) === String(petId); });
+            if (pet) {
+                $('#name').val(pet.name);
+                var bd = pet.birthDate ? pet.birthDate.replace(/-/g, '/') : '';
+                $('#birthDate').val(bd);
+                if (pet.type) $('#typeId').val(pet.type.id);
+            }
+        });
+    } else if (ownerId) {
+        api.getOwner(ownerId).done(function(owner) {
+            $('#owner-name').text(owner.firstName + ' ' + owner.lastName);
+        });
+    }
+});
+
+$('#pet-form').on('submit', function(e) {
+    e.preventDefault();
+    if (!ownerId) return;
+
+    var bd = $('#birthDate').val().trim().replace(/\//g, '-');
+    var data = {
+        name:      $('#name').val().trim(),
+        birthDate: bd,
+        typeId:    parseInt($('#typeId').val())
+    };
+
+    var req = petId ? api.updatePet(ownerId, petId, data) : api.addPet(ownerId, data);
+    req.done(function() {
+        window.location.href = '../owners/detail.html?id=' + ownerId;
+    }).fail(function(xhr) {
+        if (xhr.responseJSON) {
+            $.each(xhr.responseJSON, function(field, msg) {
+                var $fg = $('#fg-' + field);
+                $fg.addClass('has-error');
+                $fg.find('.glyphicon-remove').show();
+                $fg.find('.help-inline').text(msg);
+            });
+        }
+    });
+});
+</script>
+</body>
+</html>

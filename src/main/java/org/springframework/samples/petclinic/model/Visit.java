@@ -15,6 +15,8 @@
  */
 package org.springframework.samples.petclinic.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.Column;
@@ -69,6 +71,7 @@ public class Visit extends BaseEntity {
      *
      * @return Value of property date.
      */
+    @JsonFormat(pattern = "yyyy-MM-dd")
     public LocalDate getDate() {
         return this.date;
     }
@@ -105,6 +108,7 @@ public class Visit extends BaseEntity {
      *
      * @return Value of property pet.
      */
+    @JsonIgnore
     public Pet getPet() {
         return this.pet;
     }

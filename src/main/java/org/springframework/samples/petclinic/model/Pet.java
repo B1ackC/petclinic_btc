@@ -15,6 +15,8 @@
  */
 package org.springframework.samples.petclinic.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.beans.support.MutableSortDefinition;
 import org.springframework.beans.support.PropertyComparator;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -66,6 +68,7 @@ public class Pet extends NamedEntity {
         this.birthDate = birthDate;
     }
 
+    @JsonFormat(pattern = "yyyy-MM-dd")
     public LocalDate getBirthDate() {
         return this.birthDate;
     }
@@ -78,6 +81,7 @@ public class Pet extends NamedEntity {
         this.type = type;
     }
 
+    @JsonIgnore
     public Owner getOwner() {
         return this.owner;
     }

@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/x-icon" href="../resources/images/favicon.png">
+    <title>PetClinic :: 반려동물 병원 관리 시스템</title>
+    <link href="../resources/css/petclinic.css" rel="stylesheet"/>
+    <link href="../webjars/jquery-ui/1.12.1/jquery-ui.min.css" rel="stylesheet"/>
+    <link href="../webjars/jquery-ui/1.12.1/jquery-ui.theme.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+
+<div class="container-fluid">
+    <div class="container xd-container">
+
+        <h2 id="veterinarians">수의사 목록</h2>
+
+        <div class="row">
+            <table id="vetsTable" class="table table-striped" aria-describedby="veterinarians" style="display:none;">
+                <thead>
+                <tr>
+                    <th scope="col">이름</th>
+                    <th scope="col">전문 분야</th>
+                </tr>
+                </thead>
+                <tbody id="vet-list"></tbody>
+            </table>
+        </div>
+
+        <div id="api-error" class="alert alert-danger" style="display:none;">
+            서버 연결에 실패했습니다. 백엔드 API가 실행 중인지 확인하세요.
+        </div>
+
+        <div id="pivotal-placeholder"></div>
+    </div>
+</div>
+
+<script src="../webjars/jquery/3.5.1/jquery.min.js"></script>
+<script src="../webjars/jquery-ui/1.12.1/jquery-ui.min.js"></script>
+<script src="../webjars/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+renderLayout({ active: 'vets', root: '..' });
+
+api.getVets()
+    .done(function(data) {
+        var vets = data.vetList || [];
+        var rows = vets.map(function(v) {
+            var specs = (v.specialties || []).map(function(s) { return s.name; }).join(' ');
+            return '<tr>' +
+                '<td>' + v.firstName + ' ' + v.lastName + '</td>' +
+                '<td>' + (specs || '없음') + '</td>' +
+                '</tr>';
+        });
+        $('#vet-list').html(rows.join(''));
+        $('#vetsTable').show();
+    })
+    .fail(function() { $('#api-error').show(); });
+</script>
+</body>
+</html>

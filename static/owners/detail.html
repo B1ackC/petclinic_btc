@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/x-icon" href="../resources/images/favicon.png">
+    <title>PetClinic :: 반려동물 병원 관리 시스템</title>
+    <link href="../resources/css/petclinic.css" rel="stylesheet"/>
+    <link href="../webjars/jquery-ui/1.12.1/jquery-ui.min.css" rel="stylesheet"/>
+    <link href="../webjars/jquery-ui/1.12.1/jquery-ui.theme.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+
+<div class="container-fluid">
+    <div class="container xd-container">
+
+        <h2 id="ownerInformation">보호자 정보</h2>
+
+        <table class="table table-striped" id="owner-table" aria-describedby="ownerInformation" style="display:none;">
+            <tr>
+                <th id="name">이름</th>
+                <td headers="name"><strong id="owner-name"></strong></td>
+            </tr>
+            <tr>
+                <th id="address">주소</th>
+                <td headers="address" id="owner-address"></td>
+            </tr>
+            <tr>
+                <th id="city">도시</th>
+                <td headers="city" id="owner-city"></td>
+            </tr>
+            <tr>
+                <th id="telephone">전화번호</th>
+                <td headers="telephone" id="owner-tel"></td>
+            </tr>
+        </table>
+
+        <a id="btn-edit-owner" href="#" class="btn btn-default" style="display:none;">보호자 수정</a>
+        <a id="btn-add-pet"   href="#" class="btn btn-default" style="display:none;">반려동물 등록</a>
+
+        <br/><br/><br/>
+        <h2 id="petsAndVisits">반려동물 및 방문 기록</h2>
+
+        <table class="table table-striped" id="pets-table" aria-describedby="petsAndVisits" style="display:none;">
+            <tbody id="pets-body"></tbody>
+        </table>
+
+        <div id="api-error" class="alert alert-danger" style="display:none;">
+            서버 연결에 실패했습니다.
+        </div>
+
+        <div id="pivotal-placeholder"></div>
+    </div>
+</div>
+
+<script src="../webjars/jquery/3.5.1/jquery.min.js"></script>
+<script src="../webjars/jquery-ui/1.12.1/jquery-ui.min.js"></script>
+<script src="../webjars/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+renderLayout({ active: 'owners', root: '..' });
+
+function qs(k) { return new URLSearchParams(window.location.search).get(k); }
+
+var ownerId = qs('id');
+if (ownerId) {
+    api.getOwner(ownerId)
+        .done(function(owner) {
+            $('#owner-name').text(owner.firstName + ' ' + owner.lastName);
+            $('#owner-address').text(owner.address);
+            $('#owner-city').text(owner.city);
+            $('#owner-tel').text(owner.telephone);
+            $('#owner-table').show();
+
+            $('#btn-edit-owner').attr('href', 'form.html?id=' + owner.id).show();
+            $('#btn-add-pet').attr('href', '../pets/form.html?ownerId=' + owner.id).show();
+
+            var pets = owner.pets || [];
+            var rows = pets.map(function(pet) {
+                var visitRows = (pet.visits || []).map(function(v) {
+                    return '<tr>' +
+                        '<td headers="visitDate">' + (v.date || '') + '</td>' +
+                        '<td headers="visitDescription">' + (v.description || '') + '</td>' +
+                        '</tr>';
+                }).join('');
+
+                return '<tr>' +
+                    '<th scope="col">' +
+                    '<dl class="dl-horizontal">' +
+                    '<dt>이름</dt><dd>' + pet.name + '</dd>' +
+                    '<dt>생년월일</dt><dd>' + (pet.birthDate || '') + '</dd>' +
+                    '<dt>종류</dt><dd>' + (pet.type ? pet.type.name : '') + '</dd>' +
+                    '</dl></th>' +
+                    '<td><table class="table-condensed" aria-describedby="petsAndVisits">' +
+                    '<thead><tr><th id="visitDate">방문일</th><th id="visitDescription">내용</th></tr></thead>' +
+                    '<tbody>' + visitRows + '</tbody>' +
+                    '<tr>' +
+                    '<td><a href="../pets/form.html?ownerId=' + owner.id + '&petId=' + pet.id + '">반려동물 수정</a></td>' +
+                    '<td><a href="../visits/form.html?ownerId=' + owner.id + '&petId=' + pet.id + '&petName=' + encodeURIComponent(pet.name) + '">방문 기록 추가</a></td>' +
+                    '</tr>' +
+                    '</table></td></tr>';
+            });
+            if (rows.length > 0) {
+                $('#pets-body').html(rows.join(''));
+                $('#pets-table').show();
+            }
+        })
+        .fail(function() { $('#api-error').show(); });
+}
+</script>
+</body>
+</html>

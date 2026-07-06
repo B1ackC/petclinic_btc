@@ -1,12 +1,16 @@
-# Eclipse
-.settings/
-.classpath
-.project
-bin/
-
-# IntelliJ IDEA
-.idea
-*.iml
-
-# Maven
+# 빌드 산출물
 target/
+*.war
+
+# IDE / 로컬
+.idea/
+*.iml
+.editorconfig
+
+# Maven Wrapper (로컬/개인용 - 미포함)
+.mvn/
+mvnw
+mvnw.cmd
+
+# CI(구형)
+.travis.yml

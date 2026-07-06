@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" type="image/x-icon" href="../resources/images/favicon.png">
+    <title>PetClinic :: 반려동물 병원 관리 시스템</title>
+    <link href="../resources/css/petclinic.css" rel="stylesheet"/>
+    <link href="../webjars/jquery-ui/1.12.1/jquery-ui.min.css" rel="stylesheet"/>
+    <link href="../webjars/jquery-ui/1.12.1/jquery-ui.theme.min.css" rel="stylesheet"/>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+
+<div class="container-fluid">
+    <div class="container xd-container">
+
+        <h2>보호자 검색</h2>
+
+        <form class="form-horizontal" id="search-owner-form">
+            <div class="form-group">
+                <div class="control-group" id="lastName-group">
+                    <label class="col-sm-2 control-label">성 </label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="lastName" size="30" maxlength="80"/>
+                        <span class="help-inline"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button type="submit" class="btn btn-default">검색</button>
+                </div>
+            </div>
+        </form>
+
+        <br/>
+        <a class="btn btn-default" href="form.html">보호자 등록</a>
+
+        <div id="result-area" style="display:none; margin-top:20px;">
+            <h2 id="owners">보호자 목록</h2>
+            <table id="ownersTable" class="table table-striped" aria-describedby="owners">
+                <thead>
+                <tr>
+                    <th scope="col" style="width: 150px;">이름</th>
+                    <th scope="col" style="width: 200px;">주소</th>
+                    <th scope="col">도시</th>
+                    <th scope="col" style="width: 120px">전화번호</th>
+                    <th scope="col">반려동물</th>
+                </tr>
+                </thead>
+                <tbody id="owner-list"></tbody>
+            </table>
+        </div>
+
+        <div id="no-result" class="alert alert-info" style="display:none;">
+            검색 결과가 없습니다.
+        </div>
+        <div id="api-error" class="alert alert-danger" style="display:none;">
+            서버 연결에 실패했습니다. 백엔드 API가 실행 중인지 확인하세요.
+        </div>
+
+        <div id="pivotal-placeholder"></div>
+    </div>
+</div>
+
+<script src="../webjars/jquery/3.5.1/jquery.min.js"></script>
+<script src="../webjars/jquery-ui/1.12.1/jquery-ui.min.js"></script>
+<script src="../webjars/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="../js/api.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+renderLayout({ active: 'owners', root: '..' });
+
+$('#search-owner-form').on('submit', function(e) {
+    e.preventDefault();
+    var lastName = $('#lastName').val().trim();
+    $('#result-area, #no-result, #api-error').hide();
+
+    api.findOwners(lastName)
+        .done(function(owners) {
+            if (!owners || owners.length === 0) {
+                $('#no-result').show();
+                return;
+            }
+            if (owners.length === 1) {
+                window.location.href = 'detail.html?id=' + owners[0].id;
+                return;
+            }
+            var rows = owners.map(function(o) {
+                var pets = (o.pets || []).map(function(p) { return p.name; }).join(' ');
+                return '<tr>' +
+                    '<td><a href="detail.html?id=' + o.id + '">' + o.firstName + ' ' + o.lastName + '</a></td>' +
+                    '<td>' + (o.address || '') + '</td>' +
+                    '<td>' + (o.city || '') + '</td>' +
+                    '<td>' + (o.telephone || '') + '</td>' +
+                    '<td>' + (pets || '') + '</td>' +
+                    '</tr>';
+            });
+            $('#owner-list').html(rows.join(''));
+            $('#result-area').show();
+        })
+        .fail(function() { $('#api-error').show(); });
+});
+</script>
+</body>
+</html>
