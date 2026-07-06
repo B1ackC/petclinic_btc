@@ -31,7 +31,7 @@
 ---
 
 ## WEB
-파일 — `static/js/api.js` (라인 2)
+파일 — `static/js/api.js`
 - `API_BASE` : `/api`
 - API 호스트/경로가 다르면 변경 (예: `http://<api-host>:8080/api`)
 
@@ -49,7 +49,7 @@ cd petclinic_btc
 - Maven Wrapper(`mvnw`) 포함 -> Maven 설치 불필요 (JDK 8/11 만 있으면 됨)
 - 결과물: `target/petclinic-api.war`
 
-테스트 (`BASE` = 서버 또는 CloudFront 주소):
+테스트 (`BASE` = 서버주소):
 ```
 curl -s <BASE>/api/health
 curl -s <BASE>/api/vets
